@@ -23,6 +23,9 @@ jobs:
   # Job 1: Deploy catalogos-service (si está marcado)
   deploy-catalogos:
     if: ${{ inputs.deploy_catalogos == true }}
+    permissions:
+      id-token: write
+      contents: read
     uses: ./.github/workflows/deploy-lambda.yml
     with:
       service_name: catalogos-service
@@ -36,6 +39,9 @@ jobs:
   # Job 2: Deploy notas-service (si está marcado)
   deploy-notas:
     if: ${{ inputs.deploy_notas == true }}
+    permissions:
+      id-token: write
+      contents: read
     uses: ./.github/workflows/deploy-lambda.yml
     with:
       service_name: notas-service
@@ -49,6 +55,9 @@ jobs:
   # Job 3: Deploy notifications-service (si está marcado)
   deploy-notifications:
     if: ${{ inputs.deploy_notifications == true }}
+    permissions:
+      id-token: write
+      contents: read
     uses: ./.github/workflows/deploy-lambda.yml
     with:
       service_name: notifications-service
