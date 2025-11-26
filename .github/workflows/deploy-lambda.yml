@@ -1,0 +1,106 @@
+name: Deploy Lambda Service (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      service_name:
+        required: true
+        type: string
+        description: 'Service name (catalogos-service, notas-service, notifications-service)'
+      ecr_repository:
+        required: true
+        type: string
+        description: 'ECR repository name'
+      lambda_function_name:
+        required: true
+        type: string
+        description: 'Lambda function name'
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+      AWS_SESSION_TOKEN:
+        required: true
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ inputs.ecr_repository }}
+          IMAGE_TAG: ${{ github.sha }}
+          SERVICE_PATH: ${{ inputs.service_name }}
+        run: |
+          echo "Building image for $SERVICE_PATH..."
+          cd $SERVICE_PATH
+
+          # Build for linux/amd64 (Lambda architecture)
+          docker build --platform linux/amd64 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker build --platform linux/amd64 -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+
+          echo "Pushing images to ECR..."
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Update Lambda function
+        env:
+          IMAGE_URI: ${{ steps.build-image.outputs.image }}
+          LAMBDA_FUNCTION: ${{ inputs.lambda_function_name }}
+        run: |
+          echo "Updating Lambda function: $LAMBDA_FUNCTION"
+          echo "New image: $IMAGE_URI"
+
+          aws lambda update-function-code \
+            --function-name $LAMBDA_FUNCTION \
+            --image-uri $IMAGE_URI \
+            --region ${{ env.AWS_REGION }}
+
+          echo "Waiting for function to be updated..."
+          aws lambda wait function-updated \
+            --function-name $LAMBDA_FUNCTION \
+            --region ${{ env.AWS_REGION }}
+
+          echo "Lambda function updated successfully!"
+
+      - name: Deploy summary
+        env:
+          SERVICE: ${{ inputs.service_name }}
+          IMAGE: ${{ steps.build-image.outputs.image }}
+          LAMBDA: ${{ inputs.lambda_function_name }}
+        run: |
+          echo "### Deployment successful! :rocket:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Service:** $SERVICE" >> $GITHUB_STEP_SUMMARY
+          echo "**Image:** $IMAGE" >> $GITHUB_STEP_SUMMARY
+          echo "**Lambda Function:** $LAMBDA" >> $GITHUB_STEP_SUMMARY
+          echo "**Region:** ${{ env.AWS_REGION }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Deployed at: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY

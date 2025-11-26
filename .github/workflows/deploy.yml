@@ -1,0 +1,87 @@
+name: Deploy Services
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_catalogos:
+        description: '📦 Deploy catalogos-service'
+        required: true
+        type: boolean
+        default: false
+      deploy_notas:
+        description: '📝 Deploy notas-service'
+        required: true
+        type: boolean
+        default: false
+      deploy_notifications:
+        description: '📧 Deploy notifications-service'
+        required: true
+        type: boolean
+        default: false
+
+jobs:
+  # Job 1: Deploy catalogos-service (si está marcado)
+  deploy-catalogos:
+    if: ${{ inputs.deploy_catalogos == true }}
+    uses: ./.github/workflows/deploy-lambda.yml
+    with:
+      service_name: catalogos-service
+      ecr_repository: catalogos-service
+      lambda_function_name: catalogos-service
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+
+  # Job 2: Deploy notas-service (si está marcado)
+  deploy-notas:
+    if: ${{ inputs.deploy_notas == true }}
+    uses: ./.github/workflows/deploy-lambda.yml
+    with:
+      service_name: notas-service
+      ecr_repository: notas-service
+      lambda_function_name: notas-service
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+
+  # Job 3: Deploy notifications-service (si está marcado)
+  deploy-notifications:
+    if: ${{ inputs.deploy_notifications == true }}
+    uses: ./.github/workflows/deploy-lambda.yml
+    with:
+      service_name: notifications-service
+      ecr_repository: notifications-service
+      lambda_function_name: notifications-service
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+
+  # Job final: Summary
+  summary:
+    needs: [deploy-catalogos, deploy-notas, deploy-notifications]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deployment Summary
+        run: |
+          echo "### Deployment Complete! 🚀" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Services deployed:**" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ inputs.deploy_catalogos }}" == "true" ]; then
+            echo "- ✅ catalogos-service" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ inputs.deploy_notas }}" == "true" ]; then
+            echo "- ✅ notas-service" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ inputs.deploy_notifications }}" == "true" ]; then
+            echo "- ✅ notifications-service" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Deployment finished at: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY

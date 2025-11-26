@@ -1,0 +1,78 @@
+{
+  "alarms": [
+    {
+      "name": "NotasVenta-HighErrorRate",
+      "description": "Alarma cuando hay más de 5 errores 5xx en un período",
+      "metric": {
+        "namespace": "NotasVentaApp",
+        "metricName": "HTTP_5xx",
+        "dimensions": [
+          {
+            "name": "Environment",
+            "value": "production"
+          }
+        ],
+        "statistic": "Sum",
+        "period": 300
+      },
+      "threshold": 5,
+      "comparisonOperator": "GreaterThanThreshold",
+      "evaluationPeriods": 1,
+      "datapointsToAlarm": 1,
+      "treatMissingData": "notBreaching"
+    },
+    {
+      "name": "NotasVenta-HighLatency",
+      "description": "Alarma cuando el p99 de tiempo de ejecución supera 3000ms",
+      "metric": {
+        "namespace": "NotasVentaApp",
+        "metricName": "TiempoEjecucionNotaVenta",
+        "dimensions": [
+          {
+            "name": "Environment",
+            "value": "production"
+          },
+          {
+            "name": "Service",
+            "value": "notas-service"
+          }
+        ],
+        "statistic": "p99",
+        "period": 300
+      },
+      "threshold": 3000,
+      "comparisonOperator": "GreaterThanThreshold",
+      "evaluationPeriods": 2,
+      "datapointsToAlarm": 2,
+      "treatMissingData": "notBreaching"
+    },
+    {
+      "name": "NotasVenta-NotificationFailures",
+      "description": "Alarma cuando hay fallos en el envío de notificaciones",
+      "metric": {
+        "namespace": "NotasVentaApp",
+        "metricName": "NotificacionesFallidas",
+        "dimensions": [
+          {
+            "name": "Environment",
+            "value": "production"
+          }
+        ],
+        "statistic": "Sum",
+        "period": 300
+      },
+      "threshold": 3,
+      "comparisonOperator": "GreaterThanThreshold",
+      "evaluationPeriods": 1,
+      "datapointsToAlarm": 1,
+      "treatMissingData": "notBreaching"
+    }
+  ],
+  "notes": {
+    "threshold_rationale": {
+      "HTTP_5xx": "Umbral de 5 errores: Se eligió este valor porque representa un balance entre detectar problemas reales sin generar alertas por errores esporádicos. En un ambiente de producción típico, 5+ errores en 5 minutos indica un problema sistémico.",
+      "TiempoEjecucionNotaVenta": "Umbral de 3000ms: Se eligió 3 segundos porque la generación de PDF y subida a S3 normalmente toma 1-2 segundos. Un p99 > 3s indica problemas de rendimiento que afectan la experiencia del usuario.",
+      "NotificacionesFallidas": "Umbral de 3 fallos: Se eligió este valor bajo porque las notificaciones son críticas para el negocio. 3 fallos en 5 minutos requiere investigación inmediata."
+    }
+  }
+}

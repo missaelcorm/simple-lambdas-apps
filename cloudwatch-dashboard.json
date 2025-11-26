@@ -1,0 +1,115 @@
+{
+  "widgets": [
+    {
+      "type": "metric",
+      "properties": {
+        "metrics": [
+          [ "NotasVentaApp", "TiempoEjecucionNotaVenta", { "stat": "p50", "label": "p50" } ],
+          [ "...", { "stat": "p90", "label": "p90" } ],
+          [ "...", { "stat": "p99", "label": "p99" } ]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "us-east-1",
+        "title": "Tiempo de Ejecución - Percentiles (p50, p90, p99)",
+        "period": 300,
+        "yAxis": {
+          "left": {
+            "label": "Milliseconds"
+          }
+        }
+      }
+    },
+    {
+      "type": "metric",
+      "properties": {
+        "metrics": [
+          [ "NotasVentaApp", "NotificacionesEnviadas", { "stat": "Sum", "label": "Total Enviadas" } ],
+          [ ".", "NotificacionesExitosas", { "stat": "Sum", "label": "Exitosas" } ],
+          [ ".", "NotificacionesFallidas", { "stat": "Sum", "label": "Fallidas" } ]
+        ],
+        "view": "singleValue",
+        "region": "us-east-1",
+        "title": "Notificaciones - Resumen",
+        "period": 300
+      }
+    },
+    {
+      "type": "metric",
+      "properties": {
+        "metrics": [
+          [ "NotasVentaApp", "HTTP_2xx", { "stat": "Sum", "label": "2xx Success" } ],
+          [ ".", "HTTP_4xx", { "stat": "Sum", "label": "4xx Client Error" } ],
+          [ ".", "HTTP_5xx", { "stat": "Sum", "label": "5xx Server Error" } ]
+        ],
+        "view": "timeSeries",
+        "stacked": true,
+        "region": "us-east-1",
+        "title": "HTTP Status Codes",
+        "period": 300,
+        "yAxis": {
+          "left": {
+            "label": "Count"
+          }
+        }
+      }
+    },
+    {
+      "type": "metric",
+      "properties": {
+        "metrics": [
+          [ "NotasVentaApp", "NotaVentaCreada", { "stat": "Sum" } ]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "us-east-1",
+        "title": "Notas de Venta Creadas",
+        "period": 300,
+        "yAxis": {
+          "left": {
+            "label": "Count"
+          }
+        }
+      }
+    },
+    {
+      "type": "metric",
+      "properties": {
+        "metrics": [
+          [ "NotasVentaApp", "TiempoEnvioNotificacion", { "stat": "Average", "label": "Promedio" } ],
+          [ "...", { "stat": "Maximum", "label": "Máximo" } ],
+          [ "...", { "stat": "Minimum", "label": "Mínimo" } ]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "us-east-1",
+        "title": "Tiempo de Envío de Notificaciones",
+        "period": 300,
+        "yAxis": {
+          "left": {
+            "label": "Milliseconds"
+          }
+        }
+      }
+    },
+    {
+      "type": "metric",
+      "properties": {
+        "metrics": [
+          [ "NotasVentaApp", "ErroresNotasService", { "stat": "Sum", "label": "Errores Notas Service" } ],
+          [ ".", "ErroresNotificationsService", { "stat": "Sum", "label": "Errores Notifications Service" } ]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "us-east-1",
+        "title": "Errores por Servicio",
+        "period": 300,
+        "yAxis": {
+          "left": {
+            "label": "Count"
+          }
+        }
+      }
+    }
+  ]
+}
